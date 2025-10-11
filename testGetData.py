@@ -34,19 +34,25 @@ class getDateTest(unittest.TestCase):
         self.assertEqual(images.shape[0], 10)
         self.assertEqual(images.shape[1:], (28, 28))
 
-    @unittest.skipIf(not globals().get('manualcheck', True), "Manual check disabled")
-    def test_by_observation(self):
-        labels, images = get_data(1, self.train_labels_file, self.train_images_file)
-        print (labels)
-        display_images(images)
-        user_input = input("Did the displayed image match the label? (y/n): ")
-        self.assertTrue(user_input.lower() == 'y', "User indicated mismatch between image and label")
+    def test_count_large(self):
+        labels, images = get_data(70000, self.train_labels_file, self.train_images_file)
+        self.assertEqual(labels.shape, (60000,))
+        self.assertEqual(images.shape[0], 60000)
+        self.assertEqual(images.shape[1:], (28, 28))
+
+    # @unittest.skipIf(not globals().get('manualcheck', True), "Manual check disabled")
+    # def test_by_observation(self):
+    #     labels, images = get_data(1, self.train_labels_file, self.train_images_file)
+    #     print (labels)
+    #     display_images(images)
+    #     user_input = input("Did the displayed image match the label? (y/n): ")
+    #     self.assertTrue(user_input.lower() == 'y', "User indicated mismatch between image and label")
         
-        labels, images = get_data(1, self.test_labels_file, self.test_images_file)
-        print (labels)
-        display_images(images)
-        user_input = input("Did the displayed image match the label? (y/n): ")
-        self.assertTrue(user_input.lower() == 'y', "User indicated mismatch between image and label")
+    #     labels, images = get_data(1, self.test_labels_file, self.test_images_file)
+    #     print (labels)
+    #     display_images(images)
+    #     user_input = input("Did the displayed image match the label? (y/n): ")
+    #     self.assertTrue(user_input.lower() == 'y', "User indicated mismatch between image and label")
 
 
 

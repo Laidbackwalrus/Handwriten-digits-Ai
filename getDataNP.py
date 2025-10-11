@@ -24,6 +24,8 @@ def get_data(count: int, labels_path: str, images_path: str,):
     - images: shape (count, rows, cols), dtype uint8
     The function clamps `count` to the number of available items in the files.
     """
+    # print(f"Loading {count} items from {labels_path} and {images_path}")
+    
     if count <= 0:
         return np.empty((0,), dtype=np.uint8), np.empty((0, 28, 28), dtype=np.uint8)
 
@@ -51,19 +53,11 @@ def get_data(count: int, labels_path: str, images_path: str,):
         magic, num_images, rows, cols = struct.unpack(">IIII", header)
         # IDX magic for images is typically 2051.
         img_bytes = rows * cols * count
+        # print(magic, num_images, rows, cols)
         images_buf = f.read(img_bytes)
         if len(images_buf) != img_bytes:
             raise ValueError("Images file does not contain enough data.")
         images = np.frombuffer(images_buf, dtype=np.uint8).reshape(count, rows, cols)
 
     return labels, images
-
-
-if __name__ == "__main__":
-    labels_path = "files/train-labels-idx1-ubyte.gz"
-    images_path = "files/train-images-idx3-ubyte.gz"
-    lbls, imgs = get_data(40, labels_path, images_path)
-    print(f"Loaded {len(lbls)} labels and {len(imgs)} images")
-    print(f"Image shape: {imgs.shape}")
-    display_images(imgs)
 

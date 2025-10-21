@@ -1,6 +1,7 @@
 import random as r
 import numpy as np
 import getDataNP as getData
+import time  # Add this import
 
 def sigmoid(z):
     # Clip z to prevent overflow
@@ -131,12 +132,15 @@ class myAI:
             print(f"Layer {i}: Weights shape: {layer.weights.shape}, Biases shape: {layer.biases.shape}")
 
 if __name__ == "__main__":
+    start_time = time.time()  # Start timer
+    
     # parameters for the Ai
     number_of_input_node = 784 
     output_nodes = 10
-    struture = [number_of_input_node, 50, 30, output_nodes]
-    learning_rate = 0.1
-    training_size, test_size = 60000, 10000
+    struture = [number_of_input_node, 200, 100, output_nodes]
+    learning_rate = 0.01
+    training_size, test_size = 10000, 5000
+    epochs = 25
 
     # training on all the data 
     digit_images_file = "files/train-images.idx3-ubyte.gz"
@@ -146,8 +150,10 @@ if __name__ == "__main__":
     vectorised_lables = batch_label_to_vector(lables)
     my_ai = myAI(struture, learning_rate)
     
-    for (image, v_label) in zip(images, vectorised_lables):
-        my_ai.train(image, v_label)               
+    for epoch in range(epochs):
+        print(f"Epoch {epoch + 1}/{epochs}")
+        for (image, v_label) in zip(images, vectorised_lables):
+            my_ai.train(image, v_label)               
 
     # testing the accuracy
     digit_images_file = "files/t10k-images.idx3-ubyte.gz"
@@ -157,9 +163,25 @@ if __name__ == "__main__":
 
     test_accuracy = my_ai.test_accuracy(test_images, test_labels)
     print(f"Test Accuracy: {test_accuracy * 100:.2f}%")
-
+    
+    end_time = time.time()  # End timer
+    total_time = end_time - start_time
+    print(f"Total Time: {total_time:.2f} seconds")
+    
+    # Convert to minutes if longer than 60 seconds
+    if total_time > 60:
+        minutes = int(total_time // 60)
+        seconds = total_time % 60
+        print(f"Total Time: {minutes}m {seconds:.2f}s")
     # for (image, label, v_label) in zip(test_images, test_labels, vectorised_labels):
     #     prediction = my_ai.predict(image)
     #     cost = my_ai.cost_function(prediction, v_label)
     #     # print(f"Predicted: {prediction}, Actual: {label}")
     #     # print(f"Cost: {cost}")
+
+
+# best result so far using:
+# 10000 training size, 5000 test size, 25 epochs, 0.01 learning rate, 200 and 100 hidden nodes
+## Test Accuracy: 87.10%
+## Total Time: 276.19 seconds
+## Total Time: 4m 36.19s

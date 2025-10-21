@@ -6,7 +6,35 @@ import time  # Add this import
 def sigmoid(z):
     # Clip z to prevent overflow
     z = np.clip(z, -500, 500)
+    # Clip z to prevent overflow
+    z = np.clip(z, -500, 500)
     return 1 / (1 + np.exp(-z))
+
+def sigmoid_prime(z):
+    s = sigmoid(z)
+    return s * (1 - s)
+
+def batch_label_to_vector(labels):
+    """
+    Convert a batch of labels to one-hot encoded vectors.
+    Expects labels in range 0-9.
+    Output shape is (N, 10, 1) where N is the number of labels.
+    """
+    batch_size = labels.shape[0]
+    one_hot = np.zeros((batch_size, 10), dtype=np.float32)
+    for i in range(batch_size):
+        one_hot[i, labels[i]] = 1.0
+    return one_hot
+
+def label_to_vector(label):
+    """
+    Convert a single label to a one-hot encoded vector.
+    Expects label in range 0-9.
+    Output shape is (10, 1).
+    """
+    vector = np.zeros((10,), dtype=np.float32)
+    vector[label] = 1.0
+    return vector
 
 def sigmoid_prime(z):
     s = sigmoid(z)
@@ -38,7 +66,10 @@ class layer:
     def __init__(self, num_nodes, num_inputs) -> None:
         self.num_nodes = num_nodes
         self.values = np.zeros(num_nodes)
+        self.values = np.zeros(num_nodes)
 
+        if num_inputs is not None: # input layer has no weights or biases
+            self.biases = np.random.uniform(-0.5, 0.5, num_nodes)
         if num_inputs is not None: # input layer has no weights or biases
             self.biases = np.random.uniform(-0.5, 0.5, num_nodes)
             self.weights = np.random.uniform(-0.5, 0.5, (num_nodes, num_inputs))
@@ -47,9 +78,11 @@ class myAI:
     def __init__(self, structure, alpha) -> None:
         self.layers = []
         self.alpha = alpha 
+        self.alpha = alpha 
         self.create_network(structure)
 
     def predict(self, input_data):
+        self.layers[0].values = input_data.reshape((784,))
         self.layers[0].values = input_data.reshape((784,))
         for i in range(1, len(self.layers)):
             prev_layer = self.layers[i - 1]
@@ -97,9 +130,64 @@ class myAI:
             layer = self.layers[i]
             layer.weights -= self.alpha * gradients_w[i-1]
             layer.biases -= self.alpha * gradients_b[i-1]
+    def train(self, image, label):
+        prediction = self.predict(image)
+        deltas = self.calculate_deltas(prediction, label)
+        gradients_w, gradients_b = self.calculate_gradients(deltas)
+        self.gradient_descent(gradients_w, gradients_b)
+
+    def calculate_deltas(self, prediction, label):
+        # Output layer delta
+        deltas = np.array([None] * (len(self.layers) - 1))
+        output_layer = self.layers[-1]
+        deltas[-1] = (prediction - label) * sigmoid_prime(output_layer.values) 
+
+        # Hidden layers delta
+        for i in range(len(self.layers) - 2, 0, -1):
+            # print(i)
+            # print("shape1", np.transpose(self.layers[i+1].weights.shape))
+            # print("shape2", (np.transpose(self.layers[i+1].weights) @ deltas[i]).shape)
+            deltas[i-1] = (np.transpose(self.layers[i+1].weights) @ deltas[i]) * sigmoid_prime(self.layers[i].values)
+
+        return deltas
+
+    def calculate_gradients(self, deltas):
+        gradients_w = [None] * (len(self.layers) - 1)
+        gradients_b = [None] * (len(self.layers) - 1)
+
+        for i in range(0, len(self.layers) - 1):
+            layer = self.layers[i]
+            gradients_w[i] = np.outer(deltas[i], layer.values)
+            gradients_b[i] = deltas[i]
+
+        return gradients_w, gradients_b
+    
+    def gradient_descent(self, gradients_w, gradients_b):
+        for i in range(1, len(self.layers)):
+            layer = self.layers[i]
+            layer.weights -= self.alpha * gradients_w[i-1]
+            layer.biases -= self.alpha * gradients_b[i-1]
 
     def cost_function(self, predicted, actual):
         """Cost function using Mean Squared Error"""
+        return np.sum((predicted - actual) ** 2) / 2
+
+    def test_accuracy(self, images, labels):
+        correct = 0
+        for image, actual in zip(images, labels):
+            prediction = self.predict(image)
+            guess = np.argmax(prediction)
+            if guess == actual:
+                correct += 1
+
+        return correct / len(images)
+
+    def all_layer_values(self):
+        array = np.zeros((len(self.layers), 1))
+        for i, layer in enumerate(self.layers):
+            array[i] = layer.values
+        return array
+
         return np.sum((predicted - actual) ** 2) / 2
 
     def test_accuracy(self, images, labels):

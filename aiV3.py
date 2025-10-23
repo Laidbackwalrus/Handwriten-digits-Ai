@@ -147,7 +147,7 @@ if __name__ == "__main__":
     struture = [number_of_input_node, 200, 100, output_nodes]
     learning_rate = 0.01
     training_size, test_size = 10000, 5000
-    epochs = 1
+    epochs = 25
 
     # training on all the data 
     digit_images_file = "files/train-images.idx3-ubyte.gz"
